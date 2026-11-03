@@ -1,6 +1,6 @@
 # Variables used in the models
 
-Supplementary material for *Can Patient-Specific Information Improve Medication-Based Risk Assessment? A Machine Learning Study of Bleeding-Related Hospital Admissions* (MIE 2027).
+Supplementary material for *Can Patient-Specific Information Improve Medication-Based Risk Assessment? A Machine Learning Study of Bleeding-Related Inpatient Admissions* (MIE 2027).
 
 The models used 65 variables: 37 medication-related and 28 patient-related.
 
@@ -11,7 +11,7 @@ The models used 65 variables: 37 medication-related and 28 patient-related.
 | Model 2: medication + patient | all 65 variables (M1–M37 and P1–P28) |
 | Model 3: patient | the 28 patient-related variables (P1–P28) |
 
-**Unit of analysis.** One row per hospital admission from the emergency care unit (ECU), Region Kalmar County, Sweden, 2020–2023.
+**Unit of analysis.** One row per inpatient admission from the emergency care unit (ECU), Region Kalmar County, Sweden, 2020–2023.
 
 **Timing.** Every variable uses information recorded before the day of the ECU visit (the index date), except the four healthcare-utilisation variables P25–P28. The data export does not date those four.
 
@@ -21,9 +21,9 @@ The models used 65 variables: 37 medication-related and 28 patient-related.
 
 **The medication list** for an admission is the set of distinct ATC codes (at least 5 characters) from:
 - prescriptions in the 120 days before the index date;
-- medications administered in hospital in the 7 days before the index date.
+- medications administered within healthcare in the 7 days before the index date.
 
-About 30% of admissions had no medication record. Their medication variables are 0, and their Janusmed level is 0.
+About 30% of admissions had no medication on this list. Their medication variables are 0, and their Janusmed level is 0. Pharmacy pick-ups and multidose dispensing are not part of the list (see [supplement.md](supplement.md), S5).
 
 ### Descriptors of the medication list (21)
 
@@ -49,7 +49,7 @@ About 30% of admissions had no medication record. Their medication variables are
 | M18 | `atc_R` | … group R, respiratory system | count |
 | M19 | `atc_S` | … group S, sensory organs | count |
 | M20 | `atc_V` | … group V, various | count |
-| M21 | `pharmacy_ratio` | Share of the medication list that comes from prescriptions rather than from hospital administrations | 0–1 (missing if no medication) |
+| M21 | `pharmacy_ratio` | Share of the medication list that comes from prescriptions rather than from administrations within healthcare | 0–1 (missing if no medication) |
 
 ### Janusmed outputs (16)
 
@@ -92,14 +92,14 @@ M22–M30 use each substance's peroral (systemic) risk value. M37 uses the value
 | P6 | `prior_transplantation` | Recorded organ transplantation | 2 years | 0/1 |
 | P7 | `prior_alcohol` | Recorded alcohol-related condition | 2 years | 0/1 |
 | P8 | `prior_surg_procedure` | Recorded surgical procedure | 2 years | 0/1 |
-| P9 | `prior_other_anemi` | Recorded other anaemia | 2 years | 0/1 |
+| P9 | `prior_other_anemi` | Any record in the anaemia event group, including any haemoglobin or MCV test regardless of result | 2 years | 0/1 |
 | P10 | `hemoglobin_min` | Lowest blood haemoglobin | 2 years | g/L (missing if not measured) |
 | P11 | `mcv_min` | Lowest mean corpuscular volume | 2 years | fL (missing if not measured) |
-| P12 | `pacd_gi_bleeding` | Diagnosis in the gastrointestinal bleeding code set | 1–365 days | 0/1 |
+| P12 | `pacd_gi_bleeding` | Diagnosis in the gastrointestinal bleeding code set, or a qualifying faecal haemoglobin test | 1–365 days | 0/1 |
 | P13 | `pacd_cns_bleeding` | Diagnosis in the intracranial bleeding code set | 1–365 days | 0/1 |
 | P14 | `pacd_other_bleeding` | Diagnosis in the other bleeding code set | 1–365 days | 0/1 |
 | P15 | `pacd_general_bleeding` | Diagnosis in the eye bleeding code set | 1–365 days | 0/1 |
-| P16 | `pacd_anemia_markers` | Diagnosis in the anaemia code set | 1–365 days | 0/1 |
+| P16 | `pacd_anemia_markers` | Anaemia marker: qualifying haemoglobin or MCV result, anaemia diagnosis, related drug order or recorded action | 1–365 days | 0/1 |
 | P17 | `pacd_cancer` | Cancer diagnosis | 1–365 days | 0/1 |
 | P18 | `pacd_kidney` | Kidney disease diagnosis | 1–365 days | 0/1 |
 | P19 | `pacd_transplantation` | Transplantation | 1–365 days | 0/1 |
@@ -107,14 +107,14 @@ M22–M30 use each substance's peroral (systemic) risk value. M37 uses the value
 | P21 | `pacd_alcohol` | Alcohol-related diagnosis | 1–365 days | 0/1 |
 | P22 | `pacd_liver_kidney` | Liver or kidney disease diagnosis | 1–365 days | 0/1 |
 | P23 | `pacd_surgery_7d` | Surgery | 1–7 days | 0/1 |
-| P24 | `prior_bleeding_historical` | Earlier bleeding-related hospital admission in the study cohort | 181–730 days | 0/1 |
+| P24 | `prior_bleeding_historical` | Earlier bleeding-related inpatient admission in the study cohort | 181–730 days | 0/1 |
 | P25 | `rub` | Resource utilisation band (ACG system), healthcare-utilisation level | undated | 0–5 |
 | P26 | `ic_care_days_1y` | Inpatient care days in the past year | undated | days |
 | P27 | `ic_care_episodes_120d` | Inpatient care days in the past 120 days | undated | days |
 | P28 | `ic_care_episodes_30d` | Inpatient care days in the past 30 days | undated | days |
 
 **Notes**
-- **P3–P11** come from the regional EHR event records. **P12–P23** come from the predefined diagnosis and procedure code sets of the regional data warehouse.
-- **Overlap between the two groups.** Some conditions appear in both groups with different sources and look-back windows: P3–P9 look back 2 years, P12–P23 look back 1–365 days. The visit day itself is excluded throughout.
+- **P3–P11** come from the regional EHR event records. **P12–P23** come from the predefined diagnosis, laboratory, drug-order and procedure event groups of the regional data warehouse.
+- **Overlap between the two groups.** Some conditions appear in both groups with different sources and look-back windows: P3–P9 look back 2 years, P12–P22 look back 1–365 days, P23 1–7 days. The visit day itself is excluded throughout.
 - **P27 and P28** keep their source names, which say "episodes", but the values are day counts.
-- **P25–P28** are not dated in the data export, so they may include information from the index visit itself. A sensitivity analysis without these four variables gave the same conclusions: the AUROC gain from adding patient variables was 0.147 (95% CI 0.130–0.162).
+- **P25–P28** are not dated in the data export, so they may include information from the index visit itself. A sensitivity analysis without these four variables left the gain from adding patient variables to Model 1 unchanged (AUROC +0.147, 95% CI 0.130–0.162). Model 3 fell to 0.683 and Model 2 to 0.699, so medication variables then added +0.016 (95% CI 0.009–0.023) to patient variables; in 2023 the difference was +0.008 (−0.008 to 0.023). See [supplement.md](supplement.md), S5.
