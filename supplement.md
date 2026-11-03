@@ -88,3 +88,80 @@ They were deliberately not tuned per model. The question is how much each set of
   - L2 regularisation 0.001–10.
 
 **Result.** Tuning changed neither AUROC (0.552 tuned vs 0.552 fixed; difference −0.000, bootstrap p = 0.99) nor AUPRC (0.049 vs 0.050; p = 0.62).
+
+## S4. Temporal validation
+
+**Design.** The models were trained once on admissions from 2020–2022 and tested on 2023, with the same fixed settings as in the main analysis and no tuning.
+
+| Set | Admissions | Bleeding-related (%) | Patients |
+|---|---|---|---|
+| Training, 2020–2022 | 35,857 | 1,408 (3.9) | 24,197 |
+| Test, all 2023 | 11,751 | 478 (4.1) | 9,237 |
+| Test, new patients | 7,442 | 300 (4.0) | 6,271 |
+
+Patients can appear in both periods, so "new patients" repeats the test on 2023 patients with no admission in 2020–2022 (63.3% of 2023 admissions).
+
+The comparison at equal alert volumes works as in S1, using each test population's own Janusmed rule volumes:
+- all 2023: 6.6% (≥III), 16.3% (≥II), 23.6% (≥I);
+- new patients: 5.1%, 13.5%, 21.4%.
+
+95% CIs and p-values come from 2,000 patient-level bootstrap resamples of the test population, with the fitted models held fixed, so they reflect test-set sampling only. This is a secondary analysis and p-values are not adjusted for multiple comparisons.
+
+**Table S4.1. Discrimination and sensitivity at the volume of each Janusmed rule**
+
+| Population | Approach | AUROC (95% CI) | Sensitivity at ≥III, % | Sensitivity at ≥II, % | Sensitivity at ≥I, % |
+|---|---|---|---|---|---|
+| All 2023 | Janusmed | 0.518 (0.497–0.539) | 6.7 (4.5–9.3) | 19.2 (15.7–23.1) | 27.2 (22.9–31.4) |
+| All 2023 | Model 1 | 0.535 (0.508–0.562) | 10.3 (7.4–12.9) | 19.2 (15.8–22.9) | 28.6 (24.5–32.8) |
+| All 2023 | Model 2 | 0.712 (0.686–0.737) | 27.6 (23.5–31.9) | 43.3 (38.5–47.5) | 51.5 (46.9–56.2) |
+| All 2023 | Model 3 | 0.708 (0.680–0.733) | 28.9 (24.4–32.9) | 43.9 (38.7–48.3) | 52.1 (47.2–56.6) |
+| New patients | Janusmed | 0.531 (0.505–0.559) | 4.7 (2.4–7.3) | 17.7 (13.5–22.1) | 27.7 (22.5–33.2) |
+| New patients | Model 1 | 0.516 (0.484–0.549) | 7.7 (4.7–10.9) | 16.4 (12.3–20.6) | 26.3 (21.5–31.1) |
+| New patients | Model 2 | 0.693 (0.662–0.725) | 22.7 (17.8–27.5) | 37.3 (31.4–42.7) | 47.0 (41.6–52.9) |
+| New patients | Model 3 | 0.692 (0.658–0.725) | 23.7 (18.9–28.7) | 38.0 (31.0–43.6) | 47.7 (41.3–53.4) |
+
+**Table S4.2. Comparison per Janusmed level, all 2023 (as Table 1 of the paper).** Last four columns: share of all bleeding-related admissions, % (95% CI), at that level or in an equally large band of each model's ranking.
+
+| Janusmed level | Admissions, % | Bleeding-related, n (% of level) | Janusmed, % | Model 1, % | Model 2, % | Model 3, % |
+|---|---|---|---|---|---|---|
+| III | 6.6 | 32 (4.2) | 6.7 (4.5–9.3) | 10.3 (7.4–12.9) | 27.6 (23.5–31.9) | 28.9 (24.4–32.9) |
+| II | 9.7 | 60 (5.2) | 12.6 (9.6–15.6) | 9.0 (6.8–12.0) | 15.7 (11.9–18.9) | 15.1 (11.6–18.6) |
+| I | 7.3 | 38 (4.4) | 7.9 (5.5–10.7) | 9.3 (6.9–11.9) | 8.2 (6.1–11.3) | 8.2 (5.8–11.5) |
+| 0 | 76.4 | 348 (3.9) | 72.8 (68.6–77.1) | 71.4 (67.2–75.5) | 48.5 (43.8–53.1) | 47.9 (43.4–52.8) |
+
+**Table S4.3. Differences between approaches**
+
+| Comparison | Population | AUROC difference (95% CI) | p | Sensitivity difference at ≥II, points (95% CI) | p |
+|---|---|---|---|---|---|
+| Model 1 − Janusmed | All 2023 | +0.017 (−0.014 to +0.048) | 0.30 | 0.0 (−4.3 to +4.3) | 1.00 |
+| Model 1 − Janusmed | New patients | −0.016 (−0.055 to +0.022) | 0.41 | −1.3 (−6.4 to +3.8) | 0.67 |
+| Model 2 − Model 1 | All 2023 | +0.176 (+0.145 to +0.205) | <0.002 | +24.1 (+18.7 to +28.6) | <0.002 |
+| Model 2 − Model 1 | New patients | +0.177 (+0.140 to +0.216) | <0.002 | +20.9 (+14.6 to +26.8) | <0.002 |
+| Model 2 − Model 3 | All 2023 | +0.004 (−0.008 to +0.016) | 0.51 | −0.6 (−3.8 to +2.4) | 0.74 |
+| Model 2 − Model 3 | New patients | +0.001 (−0.015 to +0.018) | 0.89 | −0.7 (−4.1 to +3.4) | 0.96 |
+
+**Calibration, all 2023.**
+
+| Model | Calibration slope | O/E |
+|---|---|---|
+| Model 1 | 0.33 | 1.05 |
+| Model 2 | 0.96 | 1.02 |
+| Model 3 | 0.94 | 1.00 |
+
+**Fixed thresholds.** We also fixed the probability cut-off that flags 16.0% of the training period (the 2020–2022 ≥II share, from out-of-fold training predictions) and applied it to 2023:
+
+| Model | Flagged in 2023, % | Sensitivity, % |
+|---|---|---|
+| Model 1 | 14.8 | 18.4 |
+| Model 2 | 17.1 | 43.7 |
+| Model 3 | 17.3 | 45.2 |
+
+**What this shows:**
+- **The main finding holds.** Adding patient variables to Model 1 raised the AUROC by +0.176 in 2023 and +0.177 in new patients, and both CIs exclude zero. Model 2 again matches Model 3, so medication information adds nothing beyond the patient variables.
+- **Model 1's gain over Janusmed was not confirmed.** The 2023 difference is +0.017 (−0.014 to +0.048), and sensitivity at ≥II is the same (19.2%). In new patients the estimate is negative: −0.016 (−0.055 to +0.022). All these CIs include zero.
+- **Calibration carried over for the models with patient variables,** but not for Model 1, whose slope of 0.33 means its predictions are too spread out.
+
+**Limitations of this check.**
+- It uses a single later year from the same region, so it is not external validation.
+- The four undated utilisation variables (P25–P28 in [variables.md](variables.md)) may include information from the index visit, in the test year as in the main analysis.
+- New patients have no admission in 2020–2022, so variable P24 (earlier bleeding-related admission) is almost never positive for them: under 0.1% of admissions, against 1.6% for all 2023.
