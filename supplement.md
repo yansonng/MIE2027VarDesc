@@ -1,6 +1,6 @@
 # Supplementary methods and results
 
-Supplement to *Can Patient-Specific Information Improve Medication-Based Risk Assessment? A Machine Learning Study of Bleeding-Related Hospital Admissions* (MIE 2027). Variable definitions: [variables.md](variables.md).
+Supplement to *Can Patient-Specific Information Improve Medication-Based Risk Assessment? A Machine Learning Study of Bleeding-Related Inpatient Admissions* (MIE 2027). Variable definitions: [variables.md](variables.md).
 
 ## S1. Comparing Janusmed with the models at equal alert volumes ("flagging")
 
@@ -41,13 +41,14 @@ At the same number of alerts, Model 2 catches 2.3 times as many bleeding-related
 **Details.**
 - Predicted probabilities that tie at the cut-off are split evenly, as under random tie-breaking.
 - Out-of-fold predictions from the five cross-validation folds are pooled and ranked together.
-- 95% CIs come from 2,000 patient-level (cluster) bootstrap resamples. The rule's alert volume is recomputed in each resample, so the models always flag exactly as many admissions as the rule.
+- 95% CIs come from 2,000 patient-level (cluster) bootstrap resamples, with the fitted models held fixed. The rule's alert volume is recomputed in each resample, so the models always flag exactly as many admissions as the rule.
+- Holm adjustment covers four tests: Model 1 − Janusmed and Model 2 − Model 1, each on AUROC and on sensitivity at ≥II. Adjusted p is <0.005 for all except Model 1 − Janusmed sensitivity at ≥II (0.031).
 
 ## S2. Choice of learner: XGBoost and logistic regression
 
-XGBoost was chosen in advance as a widely used learner for tabular clinical data. It handles missing values natively (for example, no haemoglobin measurement) and captures non-linear effects and interactions without manual specification.
+XGBoost was chosen as a widely used learner for tabular clinical data. It handles missing values natively (for example, no haemoglobin measurement) and captures non-linear effects and interactions without manual specification.
 
-To check that the conclusions do not depend on this choice, every input set was also fitted with a logistic regression. This regression uses natural-spline terms for age, haemoglobin, MCV and inpatient days, and indicator variables for the Janusmed level. On the medication side, two sequence models over the medication history (a transformer and a GRU) were also fitted.
+To check that the conclusions do not depend on this choice, every input set was also fitted with a logistic regression. This L2-penalised regression (C = 1) uses cubic B-spline terms (five quantile knots) for age, haemoglobin, MCV and inpatient days, median imputation with missing-value indicators, and indicator variables for the Janusmed level. On the medication side, two sequence models over the medication history (a transformer and a GRU) were also fitted.
 
 All models used the same five patient-grouped cross-validation folds and pooled out-of-fold predictions. The table gives AUROC (AUPRC; prevalence 0.040):
 
@@ -63,14 +64,14 @@ All models used the same five patient-grouped cross-validation folds and pooled 
 ¹ The 37 medication variables plus the raw (unbanded) Janusmed scores and five drug-pair terms.
 
 **What the comparison shows:**
-- **Both learners give the same picture.** Medication information alone stays near 0.55, and patient information raises the AUROC to about 0.70. Adding medication information to the patient variables adds nothing.
-- **XGBoost has equal or slightly higher discrimination**, mainly in AUPRC (0.135 vs 0.127 for the combined inputs).
+- **Both learners give the same picture.** Medication information alone stays near 0.55, and patient information raises the AUROC to about 0.70. Adding medication information to the patient variables adds little (see also S5).
+- **XGBoost has similar AUROC and higher AUPRC when patient variables are included** (0.135 vs 0.127 for the combined inputs). On the extended medication set, logistic regression has the slightly higher AUROC (0.557 vs 0.552).
 - **Logistic regression is somewhat better calibrated.** Calibration slope for the combined inputs is 0.92 for logistic regression vs 0.91 for XGBoost; for the patient inputs it is 0.95 vs 0.91.
 - **More flexible representations of the medication history did not improve on Model 1:** neither the extended variables nor the sequence models.
 
 ## S3. Hyperparameters
 
-All XGBoost models used the same hyperparameters, fixed before the analysis: 300 trees, maximum depth 4, learning rate 0.05, row and column subsampling 0.8, histogram tree method, and library defaults otherwise. There was no class weighting and no recalibration.
+All XGBoost models used the same fixed hyperparameters: 300 trees, maximum depth 4, learning rate 0.05, row and column subsampling 0.8, histogram tree method, and library defaults otherwise. There was no class weighting and no recalibration.
 
 They were deliberately not tuned per model. The question is how much each set of input variables adds. Tuning each model separately would mix that question with how well each model happened to be optimised.
 
@@ -157,7 +158,7 @@ The comparison at equal alert volumes works as in S1, using each test population
 | Model 3 | 17.3 | 45.2 |
 
 **What this shows:**
-- **The main finding holds.** Adding patient variables to Model 1 raised the AUROC by +0.176 in 2023 and +0.177 in new patients, and both CIs exclude zero. Model 2 again matches Model 3, so medication information adds nothing beyond the patient variables.
+- **The main finding holds.** Adding patient variables to Model 1 raised the AUROC by +0.176 in 2023 and +0.177 in new patients, and both CIs exclude zero. Model 2 again matches Model 3, so medication information adds little beyond the patient variables (see also S5).
 - **Model 1's gain over Janusmed was not confirmed.** The 2023 difference is +0.017 (−0.014 to +0.048), and sensitivity at ≥II is the same (19.2%). In new patients the estimate is negative: −0.016 (−0.055 to +0.022). All these CIs include zero.
 - **Calibration carried over for the models with patient variables,** but not for Model 1, whose slope of 0.33 means its predictions are too spread out.
 
@@ -165,3 +166,44 @@ The comparison at equal alert volumes works as in S1, using each test population
 - It uses a single later year from the same region, so it is not external validation.
 - The four undated utilisation variables (P25–P28 in [variables.md](variables.md)) may include information from the index visit, in the test year as in the main analysis.
 - New patients have no admission in 2020–2022, so variable P24 (earlier bleeding-related admission) is almost never positive for them: under 0.1% of admissions, against 1.6% for all 2023.
+
+## S5. Sensitivity analyses and outcome definition
+
+**AUROC under alternative definitions** (cross-validated; 95% CIs from 2,000 patient-level bootstrap resamples).
+
+| Analysis | Admissions | Bleeding-related | Janusmed | Model 1 | Model 2 | Model 3 | Model 2 − Model 1 (95% CI) |
+|---|---|---|---|---|---|---|---|
+| Main analysis | 47,608 | 1,886 | 0.512 | 0.552 | 0.700 | 0.699 | +0.148 (+0.131 to +0.164) |
+| Without the four undated variables (P25–P28) | 47,608 | 1,886 | 0.512 | 0.552 | 0.699 | 0.683 | +0.147 (+0.130 to +0.162) |
+| Patient records from the day before the visit excluded (windows start on day 2) | 47,608 | 1,886 | 0.512 | 0.552 | 0.688 | 0.684 | +0.136 (+0.118 to +0.152) |
+| Both of the above | 47,608 | 1,886 | 0.512 | 0.552 | 0.682 | 0.668 | +0.130 (+0.113 to +0.146) |
+| Bleeding-related admissions with main diagnosis D50, D61, D62, D64 or S06 removed (models refitted) | 46,812 | 1,090 | 0.527 | 0.543 | 0.658 | – | +0.115 (+0.095 to +0.136) |
+| Gastrointestinal bleeding as the outcome, other bleeds removed | 46,275 | 553 | 0.543 | 0.557 | 0.687 | – | +0.130 (+0.097 to +0.161) |
+| No recorded previous bleed | 42,957 | 1,375 | 0.506 | 0.547 | 0.656 | – | +0.109 (+0.090 to +0.127) |
+| Admissions with listed medication only | 33,120 | 1,353 | 0.512 | 0.561 | 0.707 | 0.706 | – |
+
+**What this shows:**
+- **The gain from adding patient variables to Model 1 holds in every analysis,** although it is smaller when anaemia and traumatic diagnoses or patients with a previous bleed are removed.
+- **Whether medication adds to patient variables depends on the undated variables.** In the main analysis Model 2 − Model 3 is +0.001 (−0.005 to +0.007). Without the undated variables it is +0.016 (+0.009 to +0.023), and in the 2023 test +0.008 (−0.008 to +0.023). Medication information therefore adds little, rather than nothing, once those variables are removed.
+- **The undated variables are not a demonstrated leak.** The data export does not date them, so we cannot rule out that they include the index visit.
+
+**Completeness of the medication list.** The list uses prescriptions (120 days) and recorded administrations (7 days). It excludes pharmacy pick-ups and multidose dispensing, because a pick-up usually repeats a prescription. However, a long-running prescription issued before the window can still be picked up inside it. Of the 14,488 admissions with no listed medication:
+- 40.1% had a pharmacy pick-up in the 120 days before the visit;
+- 25.6% had a multidose dispensing record in those 120 days;
+- 65.2% had either;
+- 74.5% had either, or a prescription 121–365 days before the visit.
+
+Exposure and Janusmed levels are therefore probably underestimated, particularly at level 0.
+
+**Outcome.** An admission is bleeding-related if its main diagnosis is in one of these ICD-10 code sets (a listed code matches itself and any longer code beginning with it):
+
+| Group | ICD-10 codes |
+|---|---|
+| Gastrointestinal | I85.0, I98.3, K22.1, K22.6, K25.0–K25.2, K25.4–K25.6, K26.0–K26.2, K26.4–K26.6, K27.0–K27.6, K29.0, K62.5, K92.0–K92.2 |
+| Intracranial | I60, I61, I62, S06.4, S06.5, S06.6 |
+| Other sites | N93, R58, H11.3, H31.3, H35.6, H43.1, I31.2, I62.1, J94.2, K66.1, M25.0, R04.0, R04.8, R04.9, T81.0, N50.1A, R23.3W, T14.0A |
+| Anaemia | D50, D61, D62, D64.9, D68.3, Y44.0 |
+
+I62.1 is listed in both code sets; no admission in this cohort had that code.
+
+**Positive predictive value at the ≥II alert volume** (share of flagged admissions that were bleeding-related): Janusmed 4.5%, Model 1 5.1%, Model 2 10.2%.
